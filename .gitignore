@@ -3,3 +3,4 @@ state.json
 /target/
 **/*.rs.bk
 Cargo.lock
+/src/grammar/parser.rs

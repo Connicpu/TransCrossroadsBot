@@ -8,7 +8,7 @@ use grammar::ast;
 grammar(cmduser: UserId);
 
 pub Command: (UserId, ast::Command) = {
-    <CommandPrefix> ("can" "you" "please"?)? <CommandStub> => (<>)
+    <CommandPrefix> ("can" "you" "please"?)? <CommandStub> "?"? => (<>)
 };
 
 CommandPrefix: UserId = {
@@ -49,10 +49,10 @@ SetCommand: ast::Command = {
 };
 
 StatCommand: ast::Command = {
-    "how" "many" "posts" "has" <target:Mention> "made" "?"? => {
+    "how" "many" "posts" "has" <target:Mention> "made" => {
         ast::Command::HowManyPosts(target)
     },
-    "how" "many" "posts" "have" "I" "made" "?"? => {
+    "how" "many" "posts" "have" "I" "made" => {
         ast::Command::HowManyPosts(cmduser)
     },
 };

@@ -1,0 +1,95 @@
+use std::str::FromStr;
+use serenity;
+use serenity::model::id::UserId;
+
+use grammar::ast;
+
+#[LALR]
+grammar(cmduser: UserId);
+
+pub Command: (UserId, ast::Command) = {
+    <CommandPrefix> <CommandStub> => (<>)
+};
+
+CommandPrefix: UserId = {
+    Hey? CommandPrefixEnd? <Mention> (CommandPrefixEnd? Hey)? CommandPrefixEnd?
+};
+
+CommandPrefixEnd: () = {
+    ",", "!", "?", "."
+};
+
+CommandStub: ast::Command = {
+    <SetCommand>,
+    <StatCommand>,
+    <AdminCommand>,
+};
+
+SetCommand: ast::Command = {
+    "set" <target:Mention> "'s"? "pronouns" "to" <pronouns:(<Pronoun> ","?)*> => {
+        ast::Command::SetPronouns {
+            target,
+            pronouns,
+        }
+    },
+
+    ("set" "my")? "pronouns" "to"? <pronouns:(<Pronoun> ","?)*> => {
+        ast::Command::SetPronouns {
+            target: cmduser,
+            pronouns,
+        }
+    },
+};
+
+StatCommand: ast::Command = {
+    "how" "many" "posts" "has" <target:Mention> "made" "?"? => {
+        ast::Command::HowManyPosts(target)
+    },
+    "how" "many" "posts" "have" "I" "made" "?"? => {
+        ast::Command::HowManyPosts(cmduser)
+    },
+};
+
+AdminCommand: ast::Command = {
+    RescanPronounsStub "from"? <high:Pronoun> "to"? <low:Pronoun> => {
+        ast::Command::RescanPronouns(high, low)
+    },
+};
+
+RescanPronounsStub: () = {
+    "rescan" "the"? "pronoun" "list" ":"?,
+    "rescan" "the"? "pronouns" "list"? ":"?,
+    "scan" "the"? "pronoun" "list" ":"?,
+    "scan" "the"? "pronouns" "list"? ":"?,
+};
+
+pub Mention: UserId = <s:r#"<@(!)?[A-Za-z0-9]+>"#> => s.parse().unwrap();
+pub Pronoun: String = {
+    "any" => "any".into(),
+    "none" => "none".into(),
+    "she" => "she/her".into(),
+    "they" => "they/them".into(),
+    "he" => "he/him".into(),
+    <PronounForm>
+};
+PronounForm: String = <s:r#"[A-Za-z]+/[A-Za-z]+"#> => {
+    let lower = s.chars().flat_map(|c| c.to_lowercase()).collect::<String>();
+    let split = lower.split('/').collect::<Vec<_>>();
+    split[..2].join("/")
+};
+pub Tag: String = <s:r#"[A-Za-z]+"#> => s.to_string();
+
+Hey: () = {
+    "hey",
+    "heY"
+    "hEy",
+    "hEY",
+    "Hey",
+    "HeY",
+    "HEy",
+    "HEY",
+    "yo",
+    "yO",
+    "Yo",
+    "YO",
+};

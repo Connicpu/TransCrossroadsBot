@@ -9,6 +9,11 @@ pub struct BotFramework {}
 
 impl Framework for BotFramework {
     fn dispatch(&mut self, ctx: Context, msg: Message, pool: &ThreadPool) {
+        let bot_uid = bot_uid(&ctx);
+        if msg.author.id == bot_uid {
+            return;
+        }
+
         let msg_gid = msg.guild_id();
 
         if msg_gid.is_none() {
@@ -22,7 +27,6 @@ impl Framework for BotFramework {
             return;
         }
 
-        let bot_uid = bot_uid(&ctx);
         if msg.mentions.iter().find(|m| m.id == bot_uid) == None {
             return;
         }

@@ -9,7 +9,20 @@ pub enum Command {
         pronouns: Vec<String>,
     },
 
+    GiveRoles {
+        target: UserId,
+        roles: Vec<String>,
+    },
+    TakeRoles {
+        target: UserId,
+        roles: Vec<String>,
+    },
+
     RescanPronouns(String, String),
+    RescanRoles(String, String),
+    AliasRole(String, String),
+    RemoveAlias(String),
+    ListAllAliases,
 
     ThankYou,
 }
@@ -34,7 +47,15 @@ impl Command {
 
         match self {
             HowManyPosts(target) => *target == cmduser,
-            SetPronouns { target, .. } => *target == cmduser || has_perm(member, Permissions::MANAGE_ROLES),
+            SetPronouns { target, .. } => {
+                *target == cmduser || has_perm(member, Permissions::MANAGE_ROLES)
+            }
+            GiveRoles { target, .. } => {
+                *target == cmduser || has_perm(member, Permissions::MANAGE_ROLES)
+            }
+            TakeRoles { target, .. } => {
+                *target == cmduser || has_perm(member, Permissions::MANAGE_ROLES)
+            }
             ThankYou => true,
             _ => false,
         }
@@ -49,6 +70,24 @@ impl Command {
             }
             RescanPronouns { .. } => {
                 commands::pronouns::scan_pronouns(ctx, msg, self);
+            }
+            RescanRoles { .. } => {
+                commands::roles::scan_roles(ctx, msg, self);
+            }
+            AliasRole { .. } => {
+                commands::roles::alias_role(ctx, msg, self);
+            }
+            RemoveAlias { .. } => {
+                commands::roles::remove_alias(ctx, msg, self);
+            }
+            ListAllAliases => {
+                commands::roles::list_aliases(ctx, msg, self);
+            }
+            GiveRoles { .. } => {
+                commands::roles::give_roles(ctx, msg, self);
+            }
+            TakeRoles { .. } => {
+                commands::roles::take_roles(ctx, msg, self);
             }
             ThankYou => {
                 commands::niceties::thank_you(msg);

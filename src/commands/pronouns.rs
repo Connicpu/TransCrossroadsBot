@@ -8,7 +8,7 @@ use grammar::ast::Command;
 pub fn scan_pronouns(ctx: &Context, msg: &Message, cmd: &Command) {
     let (high, low) = match cmd {
         Command::RescanPronouns(high, low) => (high, low),
-        _ => return,
+        _ => unreachable!(),
     };
 
     let guild = match msg.guild().map(|g| Guild::clone(&g.read())) {

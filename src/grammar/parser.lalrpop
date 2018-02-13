@@ -28,14 +28,14 @@ CommandStub: ast::Command = {
 };
 
 SetCommand: ast::Command = {
-    "set" <target:Mention> "'s"? "pronouns" "to" <pronouns:(<Pronoun> ","?)*> => {
+    "set" <target:Mention> "'s"? "pronouns" "to" <pronouns:(<Pronoun> Separator?)*> => {
         ast::Command::SetPronouns {
             target,
             pronouns,
         }
     },
 
-    ("set" "my")? "pronouns" "to"? <pronouns:(<Pronoun> ","?)*> => {
+    ("set" "my")? "pronouns" "to"? <pronouns:(<Pronoun> Separator?)*> => {
         ast::Command::SetPronouns {
             target: cmduser,
             pronouns,
@@ -47,7 +47,41 @@ SetCommand: ast::Command = {
             target: cmduser,
             pronouns: vec!["none".into()],
         }
-    }
+    },
+
+    "give" <target:Mention> <roles:(<Role> Separator?)*> => {
+        ast::Command::GiveRoles {
+            target,
+            roles,
+        }
+    },
+
+    "give" "me" <roles:(<Role> Separator?)*> => {
+        ast::Command::GiveRoles {
+            target: cmduser,
+            roles,
+        }
+    },
+
+    "take" "away" "from" <target:Mention> <roles:(<Role> Separator?)*> => {
+        ast::Command::TakeRoles {
+            target,
+            roles,
+        }
+    },
+
+    "take" "away" "my"? <roles:(<Role> Separator?)*> => {
+        ast::Command::TakeRoles {
+            target: cmduser,
+            roles,
+        }
+    },
+};
+
+Separator: () = {
+    ",",
+    "and",
+    "," "and",
 };
 
 StatCommand: ast::Command = {
@@ -60,16 +94,20 @@ StatCommand: ast::Command = {
 };
 
 AdminCommand: ast::Command = {
-    RescanPronounsStub "from"? <high:Pronoun> "to"? <low:Pronoun> => {
+    "rescan" "the" "pronoun" "list" "from" <high:Pronoun> "to" <low:Pronoun> => {
         ast::Command::RescanPronouns(high, low)
     },
-};
 
-RescanPronounsStub: () = {
-    "rescan" "the"? "pronoun" "list" ":"?,
-    "rescan" "the"? "pronouns" "list"? ":"?,
-    "scan" "the"? "pronoun" "list" ":"?,
-    "scan" "the"? "pronouns" "list"? ":"?,
+    "rescan" "the" "role" "list" "from" <high:Role> "to" <low:Role> => {
+        ast::Command::RescanRoles(high, low)
+    },
+
+    "alias" "role" <alias:Role> "to" <target:Role> => {
+        ast::Command::AliasRole(alias, target)
+    },
+
+    "remove" "alias" <alias:Role> => ast::Command::RemoveAlias(alias),
+    "list" "all" "role" "aliases" => ast::Command::ListAllAliases,
 };
 
 Niceties: ast::Command = {
@@ -92,7 +130,7 @@ PronounForm: String = <s:r#"[A-Za-z']+(/[A-Za-z']+)+"#> => {
     split[..2].join("/")
 };
 
-pub Tag: String = <s:r#"[A-Za-z]+"#> => s.to_string();
+pub Role: String = <s:r#"[A-Za-z-]+"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
 
 Thanks: () = {
     "thank", "Thank", "thanks", "Thanks" => ()

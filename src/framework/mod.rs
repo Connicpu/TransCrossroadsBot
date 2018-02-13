@@ -37,7 +37,7 @@ impl Framework for BotFramework {
             let clen = msg.content.len();
             let content = replace(&mut msg.content, String::with_capacity(clen));
             let first_mention = content.find("<@").unwrap();
-            msg.content.push_str(&content[first_mention..]);
+            msg.content.extend(content[first_mention..].chars().flat_map(|c| c.to_lowercase()));
             println!("{}", msg.content);
 
             let cmdmember = match msg.member() {

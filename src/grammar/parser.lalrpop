@@ -88,7 +88,7 @@ StatCommand: ast::Command = {
     "how" "many" "posts" "has" <target:Mention> "made" => {
         ast::Command::HowManyPosts(target)
     },
-    "how" "many" "posts" "have" "I" "made" => {
+    "how" "many" "posts" "have" "i" "made" => {
         ast::Command::HowManyPosts(cmduser)
     },
 };
@@ -133,5 +133,5 @@ PronounForm: String = <s:r#"[A-Za-z']+(/[A-Za-z']+)+"#> => {
 pub Role: String = <s:r#"[A-Za-z-]+"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
 
 Thanks: () = {
-    "thank", "Thank", "thanks", "Thanks" => ()
+    "thank", "thanks" => ()
 };

@@ -10,6 +10,8 @@ pub enum Command {
     },
 
     RescanPronouns(String, String),
+
+    ThankYou,
 }
 
 fn has_perm(member: &Member, perm: Permissions) -> bool {
@@ -33,6 +35,7 @@ impl Command {
         match self {
             HowManyPosts(target) => *target == cmduser,
             SetPronouns { target, .. } => *target == cmduser || has_perm(member, Permissions::MANAGE_ROLES),
+            ThankYou => true,
             _ => false,
         }
     }
@@ -46,6 +49,9 @@ impl Command {
             }
             RescanPronouns { .. } => {
                 commands::pronouns::scan_pronouns(ctx, msg, self);
+            }
+            ThankYou => {
+                commands::niceties::thank_you(msg);
             }
             _ => {
                 let _ = msg.reply("I'm sorry, I don't know how to do that yet :<");

@@ -3,12 +3,14 @@ use serenity::prelude::*;
 use serenity::model::prelude::*;
 use threadpool::ThreadPool;
 
+use std::mem::replace;
+
 use {bot_gid, bot_uid, grammar};
 
 pub struct BotFramework {}
 
 impl Framework for BotFramework {
-    fn dispatch(&mut self, ctx: Context, msg: Message, pool: &ThreadPool) {
+    fn dispatch(&mut self, ctx: Context, mut msg: Message, pool: &ThreadPool) {
         let bot_uid = bot_uid(&ctx);
         if msg.author.id == bot_uid {
             return;
@@ -32,6 +34,12 @@ impl Framework for BotFramework {
         }
 
         pool.execute(move || {
+            let clen = msg.content.len();
+            let content = replace(&mut msg.content, String::with_capacity(clen));
+            let first_mention = content.find("<@").unwrap();
+            msg.content.push_str(&content[first_mention..]);
+            println!("{}", msg.content);
+
             let cmdmember = match msg.member() {
                 Some(m) => m,
                 None => return,
@@ -41,7 +49,7 @@ impl Framework for BotFramework {
             let (bot_mntn, mut cmd) = match grammar::parse_command(cmduser, &msg.content) {
                 Ok(cmd) => cmd,
                 Err(_) => {
-                    let _ = msg.reply("?");
+                    let _ = msg.react("\u{1F615}");
                     return;
                 }
             };
@@ -51,10 +59,7 @@ impl Framework for BotFramework {
             }
 
             if !cmd.is_authorized(cmduser, &cmdmember) {
-                let _ = msg.reply(&format!(
-                    "I'm sorry {}, but I'm afraid I can't let you do that...",
-                    msg.author.name
-                ));
+                let _ = msg.react("\u{274C}");
                 return;
             }
 

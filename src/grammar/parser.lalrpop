@@ -23,6 +23,8 @@ CommandStub: ast::Command = {
     <SetCommand>,
     ("tell" "me"?)? <StatCommand>,
     <AdminCommand>,
+
+    <Niceties>,
 };
 
 SetCommand: ast::Command = {
@@ -70,7 +72,12 @@ RescanPronounsStub: () = {
     "scan" "the"? "pronouns" "list"? ":"?,
 };
 
+Niceties: ast::Command = {
+    Thanks "you"? "!"? => ast::Command::ThankYou,
+};
+
 pub Mention: UserId = <s:r#"<@(!)?[A-Za-z0-9]+>"#> => s.parse().unwrap();
+
 pub Pronoun: String = {
     "any" => "any".into(),
     "none" => "none".into(),
@@ -84,4 +91,9 @@ PronounForm: String = <s:r#"[A-Za-z']+(/[A-Za-z']+)+"#> => {
     let split = lower.split('/').collect::<Vec<_>>();
     split[..2].join("/")
 };
+
 pub Tag: String = <s:r#"[A-Za-z]+"#> => s.to_string();
+
+Thanks: () = {
+    "thank", "Thank", "thanks", "Thanks" => ()
+};

@@ -137,5 +137,5 @@ pub fn set_pronouns(ctx: &Context, msg: &Message, cmd: &mut Command) {
         return;
     }
 
-    let _ = msg.reply("Sure thing! :smiley:");
+    let _ = msg.react("\u{1F44D}");
 }

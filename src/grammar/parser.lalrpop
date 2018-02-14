@@ -2,7 +2,7 @@ use std::str::FromStr;
 use serenity;
 use serenity::model::id::UserId;
 
-use grammar::ast;
+use grammar::ast::{self, Command};
 
 #[LALR]
 grammar(cmduser: UserId);
@@ -28,54 +28,14 @@ CommandStub: ast::Command = {
 };
 
 SetCommand: ast::Command = {
-    "set" <target:Mention> "'s"? "pronouns" "to" <pronouns:(<Pronoun> Separator?)*> => {
-        ast::Command::SetPronouns {
-            target,
-            pronouns,
-        }
-    },
+    "set" <target:Mention> "'s"? "pronouns" "to" <pronouns:(<Pronoun> Separator?)*> => Command::pronouns(target, pronouns),
+    ("set" "my")? "pronouns" "to"? <pronouns:(<Pronoun> Separator?)*> => Command::pronouns(cmduser, pronouns),
+    "remove" "my" "pronouns" => Command::pronouns(cmduser, &["none"]),
 
-    ("set" "my")? "pronouns" "to"? <pronouns:(<Pronoun> Separator?)*> => {
-        ast::Command::SetPronouns {
-            target: cmduser,
-            pronouns,
-        }
-    },
-
-    "remove" "my" "pronouns" => {
-        ast::Command::SetPronouns {
-            target: cmduser,
-            pronouns: vec!["none".into()],
-        }
-    },
-
-    "give" <target:Mention> <roles:(<Role> Separator?)*> => {
-        ast::Command::GiveRoles {
-            target,
-            roles,
-        }
-    },
-
-    "give" "me" <roles:(<Role> Separator?)*> => {
-        ast::Command::GiveRoles {
-            target: cmduser,
-            roles,
-        }
-    },
-
-    "take" "away" "from" <target:Mention> <roles:(<Role> Separator?)*> => {
-        ast::Command::TakeRoles {
-            target,
-            roles,
-        }
-    },
-
-    "take" "away" "my"? <roles:(<Role> Separator?)*> => {
-        ast::Command::TakeRoles {
-            target: cmduser,
-            roles,
-        }
-    },
+    "give" <target:Mention> <roles:(<Role> Separator?)*> => Command::give_roles(target, roles),
+    "give" "me" <roles:(<Role> Separator?)*> => Command::give_roles(cmduser, roles),
+    "take" "away" "from" <target:Mention> <roles:(<Role> Separator?)*> => Command::take_roles(target, roles),
+    "take" "away" "my"? <roles:(<Role> Separator?)*> => Command::take_roles(cmduser, roles),
 };
 
 Separator: () = {
@@ -85,27 +45,15 @@ Separator: () = {
 };
 
 StatCommand: ast::Command = {
-    "how" "many" "posts" "has" <target:Mention> "made" => {
-        ast::Command::HowManyPosts(target)
-    },
-    "how" "many" "posts" "have" "i" "made" => {
-        ast::Command::HowManyPosts(cmduser)
-    },
+    "how" "many" "posts" "has" <target:Mention> "made" => ast::Command::HowManyPosts(target),
+    "how" "many" "posts" "have" "i" "made" => ast::Command::HowManyPosts(cmduser),
 };
 
 AdminCommand: ast::Command = {
-    "rescan" "the" "pronoun" "list" "from" <high:Pronoun> "to" <low:Pronoun> => {
-        ast::Command::RescanPronouns(high, low)
-    },
+    "rescan" "the" "pronoun" "list" "from" <high:Pronoun> "to" <low:Pronoun> => ast::Command::RescanPronouns(high, low),
+    "rescan" "the" "role" "list" "from" <high:Role> "to" <low:Role> => ast::Command::RescanRoles(high, low),
 
-    "rescan" "the" "role" "list" "from" <high:Role> "to" <low:Role> => {
-        ast::Command::RescanRoles(high, low)
-    },
-
-    "alias" "role" <alias:Role> "to" <target:Role> => {
-        ast::Command::AliasRole(alias, target)
-    },
-
+    "alias" "role" <alias:Role> "to" <target:Role> => ast::Command::AliasRole(alias, target),
     "remove" "alias" <alias:Role> => ast::Command::RemoveAlias(alias),
     "list" "all" "role" "aliases" => ast::Command::ListAllAliases,
 };

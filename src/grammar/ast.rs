@@ -97,4 +97,53 @@ impl Command {
             }
         }
     }
+
+    pub fn pronouns<I, T>(target: UserId, pronouns: I) -> Command
+    where
+        I: IntoIterator<Item = T>,
+        T: TagToStr,
+    {
+        let pronouns = pronouns.into_iter().map(|i| i.to_str()).collect();
+        Command::SetPronouns { target, pronouns }
+    }
+
+    pub fn give_roles<I, T>(target: UserId, roles: I) -> Command
+    where
+        I: IntoIterator<Item = T>,
+        T: TagToStr,
+    {
+        let roles = roles.into_iter().map(|i| i.to_str()).collect();
+        Command::GiveRoles { target, roles }
+    }
+
+    pub fn take_roles<I, T>(target: UserId, roles: I) -> Command
+    where
+        I: IntoIterator<Item = T>,
+        T: TagToStr,
+    {
+        let roles = roles.into_iter().map(|i| i.to_str()).collect();
+        Command::TakeRoles { target, roles }
+    }
+}
+
+pub trait TagToStr {
+    fn to_str(self) -> String;
+}
+
+impl TagToStr for String {
+    fn to_str(self) -> String {
+        self
+    }
+}
+
+impl<'a> TagToStr for &'a str {
+    fn to_str(self) -> String {
+        self.to_string()
+    }
+}
+
+impl<'a> TagToStr for &'a &'a str {
+    fn to_str(self) -> String {
+        self.to_string()
+    }
 }

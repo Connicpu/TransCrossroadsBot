@@ -22,6 +22,7 @@ pub enum Command {
     RescanRoles(String, String),
     AliasRole(String, String),
     RemoveAlias(String),
+    ListAllRoles,
     ListAllAliases,
 
     ThankYou,
@@ -56,6 +57,7 @@ impl Command {
             TakeRoles { target, .. } => {
                 *target == cmduser || has_perm(member, Permissions::MANAGE_ROLES)
             }
+            ListAllRoles | ListAllAliases => true,
             ThankYou => true,
             _ => false,
         }
@@ -79,6 +81,9 @@ impl Command {
             }
             RemoveAlias { .. } => {
                 commands::roles::remove_alias(ctx, msg, self);
+            }
+            ListAllRoles => {
+                commands::roles::list_roles(ctx, msg, self);
             }
             ListAllAliases => {
                 commands::roles::list_aliases(ctx, msg, self);

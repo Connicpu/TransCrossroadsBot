@@ -55,6 +55,7 @@ AdminCommand: ast::Command = {
 
     "alias" "role" <alias:Role> "to" <target:Role> => ast::Command::AliasRole(alias, target),
     "remove" "alias" <alias:Role> => ast::Command::RemoveAlias(alias),
+    "list" "all" "roles" => ast::Command::ListAllRoles,
     "list" "all" "role" "aliases" => ast::Command::ListAllAliases,
 };
 

@@ -65,6 +65,17 @@ pub fn remove_alias(ctx: &Context, msg: &Message, cmd: &Command) {
     let _ = msg.react("\u{1F44D}");
 }
 
+pub fn list_roles(ctx: &Context, msg: &Message, _cmd: &Command) {
+    let state = ::state(ctx);
+    let roles = HashMap::clone(&state.roles.roles.read().unwrap());
+
+    let mut buf = String::from("All roles:");
+    for role in roles.keys() {
+        buf.push_str(&format!("\n{}", role));
+    }
+    let _ = msg.reply(&buf);
+}
+
 pub fn list_aliases(ctx: &Context, msg: &Message, _cmd: &Command) {
     let state = ::state(ctx);
     let aliases = HashMap::clone(&state.roles.aliases.read().unwrap());

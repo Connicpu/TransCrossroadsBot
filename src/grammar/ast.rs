@@ -152,3 +152,9 @@ impl<'a> TagToStr for &'a &'a str {
         self.to_string()
     }
 }
+
+impl<'a> TagToStr for &'a String {
+    fn to_str(self) -> String {
+        self.clone()
+    }
+}

@@ -28,14 +28,36 @@ CommandStub: ast::Command = {
 };
 
 SetCommand: ast::Command = {
-    "set" <target:Mention> "'s"? "pronouns" "to" <pronouns:(<Pronoun> Separator?)*> => Command::pronouns(target, pronouns),
-    ("set" "my")? "pronouns" "to"? <pronouns:(<Pronoun> Separator?)*> => Command::pronouns(cmduser, pronouns),
-    "remove" "my" "pronouns" => Command::pronouns(cmduser, &["none"]),
+    Set <target:Mention> "'s"? "pronouns" "to" <pronouns:(<Pronoun> Separator?)*> => Command::pronouns(target, pronouns),
+    (Set "my"?)? "pronouns" "to"? <pronouns:(<Pronoun> Separator?)*> => Command::pronouns(cmduser, pronouns),
+    TakeAway "my"? "pronouns" => Command::pronouns(cmduser, &["none"]),
 
     "give" <target:Mention> <roles:(<Role> Separator?)*> => Command::give_roles(target, roles),
-    "give" "me" <roles:(<Role> Separator?)*> => Command::give_roles(cmduser, roles),
-    "take" "away" "from" <target:Mention> <roles:(<Role> Separator?)*> => Command::take_roles(target, roles),
-    "take" "away" "my"? <roles:(<Role> Separator?)*> => Command::take_roles(cmduser, roles),
+    <target:Mention> "is" <roles:(<Role> Separator?)*> => Command::give_roles(target, roles),
+    GiveMe <roles:(<Role> Separator?)*> => Command::give_roles(cmduser, roles),
+    TakeAway "from"? <target:Mention> "'s"? <roles:(<Role> Separator?)*> => Command::take_roles(target, roles),
+    TakeAway "my"? <roles:(<Role> Separator?)*> => Command::take_roles(cmduser, roles),
+    GiveMe "not" "be"? <roles:(<Role> Separator?)*> => Command::take_roles(cmduser, roles),
+};
+
+Set: () = {
+    "set",
+    "change",
+    "make",
+};
+
+GiveMe: () = {
+    "give" "me",
+    "make" "me",
+    "gimme",
+    "can" "i" "have",
+    "i" "am",
+};
+
+TakeAway: () = {
+    "take" "away",
+    "remove",
+    "get" "rid" "of",
 };
 
 Separator: () = {

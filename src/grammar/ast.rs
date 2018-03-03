@@ -22,10 +22,15 @@ pub enum Command {
     RescanRoles(String, String),
     AliasRole(String, String),
     RemoveAlias(String),
+
+    ChallengeCode,
+    PurgeChannel(ChannelId, String),
+
     ListAllRoles,
     ListAllAliases,
 
     ThankYou,
+    OmeaWaNoShinderu,
 }
 
 fn has_perm(member: &Member, perm: Permissions) -> bool {
@@ -59,6 +64,7 @@ impl Command {
             }
             ListAllRoles | ListAllAliases => true,
             ThankYou => true,
+            OmeaWaNoShinderu => true,
             _ => false,
         }
     }
@@ -96,6 +102,9 @@ impl Command {
             }
             ThankYou => {
                 commands::niceties::thank_you(msg);
+            }
+            OmeaWaNoShinderu => {
+                commands::niceties::omea_wa_no_shinderu(msg);
             }
             _ => {
                 let _ = msg.reply("I'm sorry, I don't know how to do that yet :<");

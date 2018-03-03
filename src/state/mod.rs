@@ -2,6 +2,7 @@ use json;
 
 use std::{fs, io};
 
+pub mod challenge;
 pub mod pronouns;
 pub mod roles;
 
@@ -11,6 +12,9 @@ pub struct State {
     pub pronouns: pronouns::PronounRoles,
     #[serde(default)]
     pub roles: roles::Roles,
+
+    #[serde(default)]
+    pub challenge_code: challenge::Code,
 }
 
 const STATE_FILE: &str = "state.json";

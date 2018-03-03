@@ -1,6 +1,8 @@
 use std::str::FromStr;
 use serenity;
-use serenity::model::id::UserId;
+use serenity::model::id::{UserId, ChannelId};
+
+use std::cmp::min;
 
 use grammar::ast::{self, Command};
 
@@ -8,15 +10,20 @@ use grammar::ast::{self, Command};
 grammar(cmduser: UserId);
 
 pub Command: (UserId, ast::Command) = {
-    <CommandPrefix> ("can" "you" "please"?)? <CommandStub> "?"? => (<>)
+    <CommandPrefix> => (<>, ast::Command::ThankYou),
+    <CommandPrefix> ("can" "you" "please"?)? <CommandStub> CommandEnd* => (<>),
 };
 
 CommandPrefix: UserId = {
-    <Mention> CommandPrefixEnd?
+    <Mention> CommandPrefixEnd*,
 };
 
 CommandPrefixEnd: () = {
-    ",", "!", "?", "."
+    ",", CommandEnd
+};
+
+CommandEnd: () = {
+    "!", "?", ".", ";"
 };
 
 CommandStub: ast::Command = {
@@ -52,6 +59,7 @@ GiveMe: () = {
     "gimme",
     "can" "i" "have",
     "i" "am",
+    "i'm",
 };
 
 TakeAway: () = {
@@ -79,10 +87,19 @@ AdminCommand: ast::Command = {
     "remove" "alias" <alias:Role> => ast::Command::RemoveAlias(alias),
     "list" "all" "roles" => ast::Command::ListAllRoles,
     "list" "all" "role" "aliases" => ast::Command::ListAllAliases,
+
+    "i" "formally" "request" "a" "challenge" "code" "for" "a" "destructive"
+    "action" => ast::Command::ChallengeCode,
+
+    "immediately" "purge" "all" "records" "from" "this" "channel" ","
+    <channel:Mention> "." "i" "know" "this" "action" "may" "not" "be"
+    "undone" "and" "am" "prepared" "for" "this" "action" "." "the" "challenge"
+    "code" "is" ":" <challenge_code:Role> => ast::Command::PurgeChannel(ChannelId(channel.0), challenge_code),
 };
 
 Niceties: ast::Command = {
-    Thanks "you"? "!"? => ast::Command::ThankYou,
+    Thanks "you"? => ast::Command::ThankYou,
+    "omae" "wa" "mou" "shindeiru" => ast::Command::OmeaWaNoShinderu,
 };
 
 pub Mention: UserId = <s:r#"<@(!)?[A-Za-z0-9]+>"#> => s.parse().unwrap();
@@ -95,13 +112,12 @@ pub Pronoun: String = {
     "he" => "he/him".into(),
     <PronounForm>
 };
-PronounForm: String = <s:r#"[A-Za-z']+(/[A-Za-z']+)+"#> => {
-    let lower = s.chars().flat_map(|c| c.to_lowercase()).collect::<String>();
-    let split = lower.split('/').collect::<Vec<_>>();
-    split[..2].join("/")
+PronounForm: String = <s:Role> => {
+    let split = s.split('/').collect::<Vec<_>>();
+    split[..min(2, split.len())].join("/")
 };
 
-pub Role: String = <s:r#"[A-Za-z-]+"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
+pub Role: String = <s:r#"[A-Za-z\-/&0-9\(\)]+"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
 
 Thanks: () = {
     "thank", "thanks" => ()

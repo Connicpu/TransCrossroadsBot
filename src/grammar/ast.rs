@@ -31,6 +31,7 @@ pub enum Command {
 
     ThankYou,
     OmeaWaNoShinderu,
+    Meow,
 }
 
 fn has_perm(member: &Member, perm: Permissions) -> bool {
@@ -65,6 +66,7 @@ impl Command {
             ListAllRoles | ListAllAliases => true,
             ThankYou => true,
             OmeaWaNoShinderu => true,
+            Meow => true,
             _ => false,
         }
     }
@@ -105,6 +107,9 @@ impl Command {
             }
             OmeaWaNoShinderu => {
                 commands::niceties::omea_wa_no_shinderu(msg);
+            }
+            Meow => {
+                commands::niceties::meow(msg);
             }
             _ => {
                 let _ = msg.reply("I'm sorry, I don't know how to do that yet :<");

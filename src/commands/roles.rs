@@ -1,8 +1,6 @@
 use serenity::prelude::*;
 use serenity::model::prelude::*;
 
-use std::collections::HashMap;
-
 use grammar::ast::Command;
 
 pub fn scan_roles(ctx: &Context, msg: &Message, cmd: &Command) {
@@ -67,10 +65,20 @@ pub fn remove_alias(ctx: &Context, msg: &Message, cmd: &Command) {
 
 pub fn list_roles(ctx: &Context, msg: &Message, _cmd: &Command) {
     let state = ::state(ctx);
-    let roles = HashMap::clone(&state.roles.roles.read().unwrap());
+
+    let mut roles: Vec<_> = state
+        .roles
+        .roles
+        .read()
+        .unwrap()
+        .iter()
+        .map(|(n, _)| n.clone())
+        .collect();
+
+    roles.sort();
 
     let mut buf = String::from("All roles:");
-    for role in roles.keys() {
+    for role in roles {
         buf.push_str(&format!("\n{}", role));
     }
     let _ = msg.reply(&buf);
@@ -78,7 +86,17 @@ pub fn list_roles(ctx: &Context, msg: &Message, _cmd: &Command) {
 
 pub fn list_aliases(ctx: &Context, msg: &Message, _cmd: &Command) {
     let state = ::state(ctx);
-    let aliases = HashMap::clone(&state.roles.aliases.read().unwrap());
+
+    let mut aliases: Vec<_> = state
+        .roles
+        .aliases
+        .read()
+        .unwrap()
+        .iter()
+        .map(|(a, t)| (a.clone(), t.clone()))
+        .collect();
+
+    aliases.sort();
 
     let mut buf = String::from("All current aliases:");
     for (alias, target) in aliases {

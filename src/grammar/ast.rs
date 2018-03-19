@@ -102,6 +102,9 @@ impl Command {
             TakeRoles { .. } => {
                 commands::roles::take_roles(ctx, msg, self);
             }
+            ChallengeCode => {
+                commands::purge::issue_code(ctx, msg, self);
+            }
             ThankYou => {
                 commands::niceties::thank_you(msg);
             }

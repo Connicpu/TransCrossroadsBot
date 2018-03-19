@@ -13,6 +13,7 @@ serde = "1.0.27"
 lalrpop-util = "0.14.0"
 regex = "0.2.6"
 threadpool = "1.7.1"
+rand = "0.4.2"
 
 [build-dependencies]
 lalrpop = "0.14.0"

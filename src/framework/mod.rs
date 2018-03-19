@@ -34,6 +34,8 @@ impl Framework for BotFramework {
         }
 
         pool.execute(move || {
+            let _ = msg.channel_id.broadcast_typing();
+
             let clen = msg.content.len();
             let content = replace(&mut msg.content, String::with_capacity(clen));
             let first_mention = content.find("<@").unwrap();

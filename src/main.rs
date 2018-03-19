@@ -2,6 +2,7 @@
 
 extern crate dotenv;
 extern crate lalrpop_util;
+extern crate rand;
 extern crate serde_json as json;
 extern crate serenity;
 extern crate threadpool;
@@ -118,6 +119,16 @@ pub fn log(ctx: &Context, msg: &str) {
     }
 }
 
+pub fn logres<T, E>(ctx: &Context, result: Result<T, E>)
+where
+    E: std::fmt::Debug,
+{
+    match result {
+        Err(e) => log(ctx, &format!("{:#?}", e)),
+        Ok(_) => (),
+    }
+}
+
 pub fn staff_alert(ctx: &Context) -> Arc<StaffAlertData> {
     ctx.data.lock().get::<StaffAlertData>().cloned().unwrap()
 }
@@ -148,6 +159,9 @@ impl EventHandler for Handler {
             return;
         }
 
-        log(&context, &format!("{}#{} left the server", user.name, user.discriminator));
+        log(
+            &context,
+            &format!("{}#{} left the server", user.name, user.discriminator),
+        );
     }
 }

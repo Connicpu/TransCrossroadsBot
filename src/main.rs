@@ -151,11 +151,11 @@ lazy_static! {
             let mut buf = vec![];
             while let Ok(Ok(first)) = rx.recv() {
                 buf.push(first);
-                std::thread::sleep(std::time::Duration::from_millis(500));
+                std::thread::sleep(std::time::Duration::from_secs(1));
                 while let Ok(Ok(next)) = rx.try_recv() {
                     buf.push(next);
                 }
-                std::thread::sleep(std::time::Duration::from_millis(500));
+                std::thread::sleep(std::time::Duration::from_secs(5));
                 let _ = channel.delete_messages(&buf);
                 buf.clear();
             }

@@ -238,6 +238,7 @@ impl EventHandler for Handler {
 
         let state = state(&context);
         let times = state.leave_counts.increment(user.id);
+        let _ = state.save();
 
         log(
             &context,

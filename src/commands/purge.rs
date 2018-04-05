@@ -29,3 +29,10 @@ pub fn issue_code(ctx: &Context, msg: &Message, _cmd: &Command) {
     ));
     logres(ctx, result);
 }
+
+pub fn purge_channel(ctx: &Context, msg: &Message, cmd: &Command) {
+    let (channel, code) = match cmd {
+        Command::PurgeChannel(channel, code) => (*channel, code.clone()),
+        _ => return,
+    };
+}

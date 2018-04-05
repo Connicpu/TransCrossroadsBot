@@ -1,5 +1,8 @@
 #![feature(conservative_impl_trait, fs_read_write, inclusive_range_syntax, match_default_bindings)]
 
+#[macro_use]
+extern crate lazy_static;
+
 extern crate dotenv;
 extern crate lalrpop_util;
 extern crate rand;
@@ -15,7 +18,9 @@ use serenity::prelude::*;
 use serenity::model::prelude::*;
 
 use std::env;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::sync::mpsc::{channel, Sender};
+use std::fmt::Write;
 
 pub mod state;
 pub mod commands;
@@ -42,6 +47,7 @@ pub struct StaffAlertData {
     mod_channel: ChannelId,
     front_door: ChannelId,
     mod_call: RoleId,
+    the_void: ChannelId,
 }
 impl typemap::Key for StaffAlertData {
     type Value = Arc<StaffAlertData>;
@@ -67,12 +73,16 @@ fn main() {
     let mod_channel = env_token("MOD_CHANNEL", ChannelId);
     let front_door = env_token("FRONT_DOOR", ChannelId);
     let mod_call = env_token("MOD_CALL", RoleId);
+    let the_void = env_token("THE_VOID", ChannelId);
+
+    let _ = DELETE_QUEUE.lock().unwrap().send(Err(the_void));
 
     let staff_alert = Arc::new(StaffAlertData {
         admin_channel,
         mod_channel,
         front_door,
         mod_call,
+        the_void,
     });
 
     let state = Arc::new(state::State::load());
@@ -133,19 +143,86 @@ pub fn staff_alert(ctx: &Context) -> Arc<StaffAlertData> {
     ctx.data.lock().get::<StaffAlertData>().cloned().unwrap()
 }
 
+lazy_static! {
+    static ref DELETE_QUEUE: Arc<Mutex<Sender<Result<MessageId, ChannelId>>>> = {
+        let (tx, rx) = channel::<Result<MessageId, ChannelId>>();
+        std::thread::spawn(move || {
+            let channel = rx.recv().unwrap().unwrap_err();
+            let mut buf = vec![];
+            while let Ok(Ok(first)) = rx.recv() {
+                buf.push(first);
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                while let Ok(Ok(next)) = rx.try_recv() {
+                    buf.push(next);
+                }
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                let _ = channel.delete_messages(&buf);
+                buf.clear();
+            }
+        });
+
+        Arc::new(Mutex::new(tx))
+    };
+}
+
 struct Handler;
 impl EventHandler for Handler {
-    fn guild_member_addition(&self, context: Context, guild: GuildId, _: Member) {
+    fn message(&self, context: Context, msg: Message) {
+        let staff_alert = staff_alert(&context);
+        if msg.channel_id != staff_alert.the_void {
+            return;
+        }
+
+        let channel = match msg.channel_id.get() {
+            Ok(Channel::Guild(gc)) => gc,
+            _ => return,
+        };
+
+        let guild = match serenity::CACHE
+            .read()
+            .guilds
+            .get(&channel.read().guild_id)
+            .cloned()
+        {
+            Some(guild) => guild,
+            None => return,
+        };
+
+        let permissions = guild.read().member_permissions(msg.author.id);
+        let is_admin = permissions & Permissions::ADMINISTRATOR == Permissions::ADMINISTRATOR;
+
+        if msg.content.starts_with("ADMIN:") && is_admin {
+            return;
+        }
+
+        let _ = DELETE_QUEUE.lock().unwrap().send(Ok(msg.id));
+    }
+
+    fn guild_member_addition(&self, context: Context, guild: GuildId, member: Member) {
         if guild != bot_gid(&context) {
             return;
         }
 
         let staff_alert = staff_alert(&context);
-        let _ = staff_alert.mod_channel.say(format!(
+        let state = state(&context);
+
+        let mut message = format!(
             "Hey {modcall}, there's a new user in {frontdoor}~",
             modcall = staff_alert.mod_call.mention(),
             frontdoor = staff_alert.front_door.mention(),
-        ));
+        );
+
+        let times = state.leave_counts.get(member.user.read().id);
+        if times > 0 {
+            let _ = write!(
+                &mut message,
+                " (they're back for the {}{} time)",
+                times,
+                cardinality(times)
+            );
+        }
+
+        let _ = staff_alert.mod_channel.say(message);
     }
 
     fn guild_member_removal(
@@ -159,9 +236,28 @@ impl EventHandler for Handler {
             return;
         }
 
+        let state = state(&context);
+        let times = state.leave_counts.increment(user.id);
+
         log(
             &context,
-            &format!("{}#{} left the server", user.name, user.discriminator),
+            &format!(
+                "{}#{} left the server ({}{} time)",
+                user.name,
+                user.discriminator,
+                times,
+                cardinality(times)
+            ),
         );
+    }
+}
+
+fn cardinality(i: u32) -> &'static str {
+    match ((i / 10) % 10, i % 10) {
+        (1, _) => "th",
+        (_, 1) => "st",
+        (_, 2) => "nd",
+        (_, 3) => "rd",
+        (_, _) => "th",
     }
 }

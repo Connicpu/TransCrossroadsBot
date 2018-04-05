@@ -105,6 +105,9 @@ impl Command {
             ChallengeCode => {
                 commands::purge::issue_code(ctx, msg, self);
             }
+            PurgeChannel(..) => {
+                commands::purge::purge_channel(ctx, msg, self);
+            }
             ThankYou => {
                 commands::niceties::thank_you(msg);
             }

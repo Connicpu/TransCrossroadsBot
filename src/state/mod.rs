@@ -3,6 +3,7 @@ use json;
 use std::{fs, io};
 
 pub mod challenge;
+pub mod leaves;
 pub mod pronouns;
 pub mod roles;
 
@@ -15,6 +16,9 @@ pub struct State {
 
     #[serde(default)]
     pub challenge_code: challenge::Code,
+
+    #[serde(default)]
+    pub leave_counts: leaves::Counts,
 }
 
 const STATE_FILE: &str = "state.json";

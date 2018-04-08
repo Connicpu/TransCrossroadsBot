@@ -1,5 +1,6 @@
-use serenity::prelude::*;
+use chrono::{DateTime, FixedOffset};
 use serenity::model::prelude::*;
+use serenity::prelude::*;
 
 #[derive(Debug)]
 pub enum Command {
@@ -24,7 +25,9 @@ pub enum Command {
     RemoveAlias(String),
 
     ChallengeCode,
-    PurgeChannel(ChannelId, String),
+    PurgeChannel(ChannelId, DateTime<FixedOffset>, DateTime<FixedOffset>, String),
+    ExecutePurge(u32),
+    CancelPurge,
 
     ListAllRoles,
     ListAllAliases,
@@ -107,6 +110,12 @@ impl Command {
             }
             PurgeChannel(..) => {
                 commands::purge::purge_channel(ctx, msg, self);
+            }
+            ExecutePurge(..) => {
+                commands::purge::execute_purge(ctx, msg, self);
+            }
+            CancelPurge => {
+                commands::purge::cancel_purge(ctx);
             }
             ThankYou => {
                 commands::niceties::thank_you(msg);

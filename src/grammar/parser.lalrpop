@@ -1,7 +1,8 @@
-use std::str::FromStr;
+use chrono::{DateTime, FixedOffset, Utc};
 use serenity;
 use serenity::model::id::{UserId, ChannelId};
 
+use std::str::FromStr;
 use std::cmp::min;
 
 use grammar::ast::{self, Command};
@@ -88,13 +89,19 @@ AdminCommand: ast::Command = {
     "list" "all" "roles" => ast::Command::ListAllRoles,
     "list" "all" "role" "aliases" => ast::Command::ListAllAliases,
 
-    "i" "formally" "request" "a" "challenge" "code" "for" "a" "destructive"
-    "action" => ast::Command::ChallengeCode,
+    "i" "formally" "request" "a" "challenge" "code" "for" "a" "destructive" "action"
+    => ast::Command::ChallengeCode,
 
     "immediately" "purge" "all" "records" "from" "this" "channel" ","
-    <channel:ChanMention> "." "i" "know" "this" "action" "may" "not" "be"
-    "undone" "and" "am" "prepared" "for" "this" "action" "." "the" "challenge"
-    "code" "is" ":" <challenge_code:Role> => ast::Command::PurgeChannel(channel, challenge_code),
+    <channel:ChanMention> "," "after" <time:TimeStamp> "," "before" <time2:TimeStamp> "."
+    "i" "know" "this" "action" "may" "not" "be" "undone" "and" "am" "prepared" "for" "this"
+    "action" "." "the" "challenge" "code" "is" ":" <challenge_code:Role>
+    => ast::Command::PurgeChannel(channel, time, time2, challenge_code),
+
+    "definitely" "do" "that" "purge" "haha" "rip" "all" <num:Num> "of" "those" "messages" "!"
+    => ast::Command::ExecutePurge(num),
+
+    "cancel" "purge" => ast::Command::CancelPurge,
 };
 
 Niceties: ast::Command = {
@@ -104,7 +111,15 @@ Niceties: ast::Command = {
 };
 
 pub Mention: UserId = <s:r#"<@(!)?[0-9]+>"#> => s.parse().unwrap();
-pub ChanMention: ChannelId = <s:r#"<#[0-9]+>"#> => s.parse().unwrap();
+pub ChanMention: ChannelId = <s:r#"<#[0-9]+>"#> => ChannelId(s[2..s.len()-1].parse().unwrap());
+pub TimeStamp: DateTime<FixedOffset> = <s:r#"([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#> => {
+    DateTime::parse_from_rfc3339(s).unwrap_or_else(|_| {
+        let now = ::std::time::SystemTime::now();
+        let now: DateTime<Utc> = now.into();
+        DateTime::from_utc(now.naive_utc(), FixedOffset::east(0))
+    })
+};
+pub Num: u32 = <s:r#"[0-9]+"#> => s.parse().unwrap();
 
 pub Pronoun: String = {
     "any" => "any".into(),
@@ -119,7 +134,7 @@ PronounForm: String = <s:Role> => {
     split[..min(2, split.len())].join("/")
 };
 
-pub Role: String = <s:r#"[A-Za-z\-/&0-9\(\)]+"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
+pub Role: String = <s:r#"[A-Za-z][A-Za-z\-/&0-9\(\)]*"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
 
 Thanks: () = {
     "thank", "thanks" => ()

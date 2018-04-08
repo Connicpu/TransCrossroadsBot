@@ -1,6 +1,6 @@
 use serenity::framework::Framework;
-use serenity::prelude::*;
 use serenity::model::prelude::*;
+use serenity::prelude::*;
 use threadpool::ThreadPool;
 
 use std::mem::replace;
@@ -39,7 +39,11 @@ impl Framework for BotFramework {
             let clen = msg.content.len();
             let content = replace(&mut msg.content, String::with_capacity(clen));
             let first_mention = content.find("<@").unwrap();
-            msg.content.extend(content[first_mention..].chars().flat_map(|c| c.to_lowercase()));
+            msg.content.extend(
+                content[first_mention..]
+                    .chars()
+                    .flat_map(|c| c.to_lowercase()),
+            );
             println!("{}", msg.content);
 
             let cmdmember = match msg.member() {

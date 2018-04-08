@@ -1,5 +1,5 @@
-use serenity::prelude::*;
 use serenity::model::prelude::*;
+use serenity::prelude::*;
 
 use grammar::ast::Command;
 

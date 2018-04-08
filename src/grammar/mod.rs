@@ -8,6 +8,9 @@ mod parser;
 
 pub type Error<'a> = lalrpop_util::ParseError<usize, parser::Token<'a>, &'static str>;
 
-pub fn parse_command<'a>(cmduser: UserId, message: &'a str) -> Result<(UserId, ast::Command), Error<'a>> {
+pub fn parse_command<'a>(
+    cmduser: UserId,
+    message: &'a str,
+) -> Result<(UserId, ast::Command), Error<'a>> {
     parser::parse_Command(cmduser, message)
 }

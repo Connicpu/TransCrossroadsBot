@@ -1,8 +1,9 @@
-#![feature(conservative_impl_trait, fs_read_write, inclusive_range_syntax, match_default_bindings)]
+#![feature(fs_read_write, match_default_bindings)]
 
 #[macro_use]
 extern crate lazy_static;
 
+extern crate chrono;
 extern crate dotenv;
 extern crate lalrpop_util;
 extern crate rand;

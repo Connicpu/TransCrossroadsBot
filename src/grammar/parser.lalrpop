@@ -134,7 +134,11 @@ PronounForm: String = <s:Role> => {
     split[..min(2, split.len())].join("/")
 };
 
-pub Role: String = <s:r#"[A-Za-z][A-Za-z\-/&0-9\(\)]*"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
+pub Role: String = {
+    NameRole,
+    <n:Num> => n.to_string(),
+};
+pub NameRole: String = <s:r#"[A-Za-z][A-Za-z\-/&0-9\(\)]*"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
 
 Thanks: () = {
     "thank", "thanks" => ()

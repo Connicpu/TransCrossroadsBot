@@ -4,10 +4,14 @@ REMOTE_DIR="/home/connie/transybot"
 scp target/release/transcrossroadsbot "$REMOTE:$REMOTE_DIR/transybot-tmp"
 ssh $REMOTE "
     cd $REMOTE_DIR
-    rm transybot
-    mv transybot-tmp transybot
-    chmod 700 transybot
-    ls -al
+    if [ -f transybot-tmp ]; then
+        rm transybot
+        mv transybot-tmp transybot
+        chmod 700 transybot
+        ls -al
+    else
+        echo 'New executable not found'
+    fi
     echo 'Restarting Transybot'
     systemctl --user restart transybot
 "

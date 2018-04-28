@@ -1,4 +1,4 @@
-#![feature(fs_read_write, match_default_bindings)]
+#![feature(fs_read_write)]
 
 #[macro_use]
 extern crate lazy_static;

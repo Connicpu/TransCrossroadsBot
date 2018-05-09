@@ -208,9 +208,10 @@ impl EventHandler for Handler {
         let state = state(&context);
 
         let mut message = format!(
-            "Hey {modcall}, there's a new user in {frontdoor}~",
+            "Hey {modcall}, {user} just joined! Check the {frontdoor}~",
             modcall = staff_alert.mod_call.mention(),
             frontdoor = staff_alert.front_door.mention(),
+            user = member.mention(),
         );
 
         let times = state.leave_counts.get(member.user.read().id);

@@ -244,7 +244,8 @@ impl EventHandler for Handler {
         log(
             &context,
             &format!(
-                "{}#{} left the server ({}{} time)",
+                "{} ({}#{}) left the server ({}{} time)",
+                user.mention(),
                 user.name,
                 user.discriminator,
                 times,

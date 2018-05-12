@@ -1,3 +1,4 @@
+pub mod convert;
 pub mod niceties;
 pub mod pronouns;
 pub mod purge;

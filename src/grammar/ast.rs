@@ -25,7 +25,12 @@ pub enum Command {
     RemoveAlias(String),
 
     ChallengeCode,
-    PurgeChannel(ChannelId, DateTime<FixedOffset>, DateTime<FixedOffset>, String),
+    PurgeChannel(
+        ChannelId,
+        DateTime<FixedOffset>,
+        DateTime<FixedOffset>,
+        String,
+    ),
     ExecutePurge(u32),
     CancelPurge,
 
@@ -35,6 +40,13 @@ pub enum Command {
     ThankYou,
     OmeaWaNoShinderu,
     Meow,
+
+    Convert {
+        value: f64,
+        chemical: String,
+        from: String,
+        to: String,
+    },
 }
 
 fn has_perm(member: &Member, perm: Permissions) -> bool {
@@ -70,6 +82,7 @@ impl Command {
             ThankYou => true,
             OmeaWaNoShinderu => true,
             Meow => true,
+            Convert { .. } => true,
             _ => false,
         }
     }
@@ -126,6 +139,7 @@ impl Command {
             Meow => {
                 commands::niceties::meow(msg);
             }
+            Convert { .. } => commands::convert::convert(ctx, msg, self),
             _ => {
                 let _ = msg.reply("I'm sorry, I don't know how to do that yet :<");
             }
@@ -157,6 +171,15 @@ impl Command {
     {
         let roles = roles.into_iter().map(|i| i.to_str()).collect();
         Command::TakeRoles { target, roles }
+    }
+
+    pub fn convert(value: f64, chemical: String, from: String, to: String) -> Command {
+        Command::Convert {
+            value,
+            chemical,
+            from,
+            to,
+        }
     }
 }
 

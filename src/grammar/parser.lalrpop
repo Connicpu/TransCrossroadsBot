@@ -30,9 +30,14 @@ CommandEnd: () = {
 CommandStub: ast::Command = {
     <SetCommand>,
     ("tell" "me"?)? <StatCommand>,
+    <ConversionCommand>,
     <AdminCommand>,
 
     <Niceties>,
+};
+
+ConversionCommand: ast::Command = {
+    "convert" <v:Float> <from:Role> <chem:Role> "to" <to:Role> => Command::convert(v, chem, from, to),
 };
 
 SetCommand: ast::Command = {
@@ -120,6 +125,12 @@ pub TimeStamp: DateTime<FixedOffset> = <s:r#"([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[1
     })
 };
 pub Num: u32 = <s:r#"[0-9]+"#> => s.parse().unwrap();
+pub FloatWithDot: f64 = <s:r#"[0-9]+\.[0-9]+"#> => s.parse().unwrap();
+
+pub Float: f64 = {
+    <n:Num> => n as f64,
+    FloatWithDot,
+};
 
 pub Pronoun: String = {
     "any" => "any".into(),

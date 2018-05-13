@@ -98,7 +98,7 @@ pub fn convert(_ctx: &Context, msg: &Message, cmd: &Command) {
 
     let newvalue = value * (tofactor / fromfactor);
     let _ = msg.reply(&format!(
-        "{} {} of {} is {} {}",
+        "{} {} of {} is {:.3} {}",
         value, from, chem, newvalue, to,
     ));
 }

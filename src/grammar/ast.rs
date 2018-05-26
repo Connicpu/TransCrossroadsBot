@@ -1,3 +1,5 @@
+use commands::dice::DiceRoll;
+
 use chrono::{DateTime, FixedOffset};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
@@ -47,6 +49,8 @@ pub enum Command {
         from: String,
         to: String,
     },
+
+    Dice(DiceRoll),
 }
 
 fn has_perm(member: &Member, perm: Permissions) -> bool {

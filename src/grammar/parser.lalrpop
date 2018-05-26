@@ -6,6 +6,7 @@ use std::str::FromStr;
 use std::cmp::min;
 
 use grammar::ast::{self, Command};
+use commands::dice::{self, DiceRoll, DiceSpecifier};
 
 #[LALR]
 grammar(cmduser: UserId);
@@ -115,24 +116,24 @@ Niceties: ast::Command = {
     "meow" => ast::Command::Meow,
 };
 
-pub Mention: UserId = <s:r#"<@(!)?[0-9]+>"#> => s.parse().unwrap();
-pub ChanMention: ChannelId = <s:r#"<#[0-9]+>"#> => ChannelId(s[2..s.len()-1].parse().unwrap());
-pub TimeStamp: DateTime<FixedOffset> = <s:r#"([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#> => {
+Mention: UserId = <s:r#"<@(!)?[0-9]+>"#> => s.parse().unwrap();
+ChanMention: ChannelId = <s:r#"<#[0-9]+>"#> => ChannelId(s[2..s.len()-1].parse().unwrap());
+TimeStamp: DateTime<FixedOffset> = <s:r#"([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))"#> => {
     DateTime::parse_from_rfc3339(s).unwrap_or_else(|_| {
         let now = ::std::time::SystemTime::now();
         let now: DateTime<Utc> = now.into();
         DateTime::from_utc(now.naive_utc(), FixedOffset::east(0))
     })
 };
-pub Num: u32 = <s:r#"[0-9]+"#> => s.parse().unwrap();
-pub FloatWithDot: f64 = <s:r#"[0-9]+\.[0-9]+"#> => s.parse().unwrap();
+Num: u32 = <s:r#"[0-9]+"#> => s.parse().unwrap();
+FloatWithDot: f64 = <s:r#"[0-9]+\.[0-9]+"#> => s.parse().unwrap();
 
-pub Float: f64 = {
+Float: f64 = {
     <n:Num> => n as f64,
     FloatWithDot,
 };
 
-pub Pronoun: String = {
+Pronoun: String = {
     "any" => "any".into(),
     "none" => "none".into(),
     "she" => "she/her".into(),
@@ -145,13 +146,23 @@ PronounForm: String = <s:Role> => {
     split[..min(2, split.len())].join("/")
 };
 
-pub Role: String = {
+Role: String = {
     NameRole,
+    "???sexual" => "???sexual".to_string(),
     "a" => "a".to_string(),
     <n:Num> => n.to_string(),
 };
-pub NameRole: String = <s:r#"[A-Za-z][A-Za-z\-/&0-9\(\)]*"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
+NameRole: String = <s:r#"[A-Za-z][A-Za-z\-/&\(\)]*"#> => s.chars().flat_map(|c| c.to_lowercase()).collect();
 
 Thanks: () = {
     "thank", "thanks" => ()
+};
+
+DiceSpecifier: DiceSpecifier = <s:r#"([0-9]*)d([0-9]+)"#> => {
+    let mut parts = s.split("d");
+    let num = parts.next().unwrap().parse().unwrap_or(1);
+    let sides = parts.next().unwrap().parse().unwrap();
+    assert!(parts.next().is_none());
+
+    DiceSpecifier { num, sides }
 };

@@ -200,20 +200,25 @@ impl EventHandler for Handler {
         }
 
         if msg.channel_id == staff_alert.anon_feedback {
-            let () = log(
+            log(
                 &context,
                 &format!(
-                    "{id} ({name}) provided some anonymous feedback - {time}\n\
+                    "{id} ({name}#{disc:04}) provided some anonymous feedback - {time}\n\
                      \"{content}\"",
                     id = msg.author.id.mention(),
                     name = msg.author.name,
+                    disc = msg.author.discriminator,
                     content = msg.content_safe().trim(),
                     time = msg.timestamp.to_rfc2822(),
                 ),
             );
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                let _ = msg.delete();
+            });
+        } else {
+            let _ = DELETE_QUEUE.lock().unwrap().send(Ok(msg.id));
         }
-
-        let _ = DELETE_QUEUE.lock().unwrap().send(Ok(msg.id));
     }
 
     fn guild_member_addition(&self, context: Context, guild: GuildId, member: Member) {

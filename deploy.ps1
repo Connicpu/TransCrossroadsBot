@@ -1,6 +1,7 @@
 #!/bin/sh
 $REMOTE="connie@wf.ukl.me"
 $REMOTE_DIR="/home/connie/transybot"
+scp .env "$REMOTE`:$REMOTE_DIR/.env"
 scp target/release/transcrossroadsbot "$REMOTE`:$REMOTE_DIR/transybot-tmp"
 ssh $REMOTE "
     cd $REMOTE_DIR

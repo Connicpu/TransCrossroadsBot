@@ -50,6 +50,7 @@ pub struct StaffAlertData {
     mod_call: RoleId,
     the_void: ChannelId,
     anon_feedback: ChannelId,
+    feedback_log: ChannelId,
 }
 impl typemap::Key for StaffAlertData {
     type Value = Arc<StaffAlertData>;
@@ -77,6 +78,7 @@ fn main() {
     let mod_call = env_token("MOD_CALL", RoleId);
     let the_void = env_token("THE_VOID", ChannelId);
     let anon_feedback = env_token("ANON_FEEDBACK", ChannelId);
+    let feedback_log = env_token("FEEDBACK_LOG", ChannelId);
 
     let _ = DELETE_QUEUE.lock().unwrap().send(Err(the_void));
 
@@ -87,6 +89,7 @@ fn main() {
         mod_call,
         the_void,
         anon_feedback,
+        feedback_log,
     });
 
     let state = Arc::new(state::State::load());
@@ -200,18 +203,18 @@ impl EventHandler for Handler {
         }
 
         if msg.channel_id == staff_alert.anon_feedback {
-            log(
-                &context,
-                &format!(
-                    "{id} ({name}#{disc:04}) provided some anonymous feedback - {time}\n\
-                     \"{content}\"",
-                    id = msg.author.id.mention(),
-                    name = msg.author.name,
-                    disc = msg.author.discriminator,
-                    content = msg.content_safe().trim(),
-                    time = msg.timestamp.to_rfc2822(),
-                ),
+            let data = format!(
+                "{id} (`{name}#{disc:04}`) provided some anonymous feedback - {time}\n\
+                 \"{content}\"",
+                id = msg.author.id.mention(),
+                name = msg.author.name,
+                disc = msg.author.discriminator,
+                content = msg.content_safe().trim(),
+                time = msg.timestamp.to_rfc2822(),
             );
+
+            let _ = staff_alert.feedback_log.say(data);
+
             std::thread::spawn(move || {
                 std::thread::sleep(std::time::Duration::from_millis(100));
                 let _ = msg.delete();

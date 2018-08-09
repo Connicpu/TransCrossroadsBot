@@ -15,18 +15,18 @@ extern crate typemap;
 #[macro_use]
 extern crate serde_derive;
 
-use serenity::prelude::*;
 use serenity::model::prelude::*;
+use serenity::prelude::*;
 
 use std::env;
-use std::sync::{Arc, Mutex};
-use std::sync::mpsc::{channel, Sender};
 use std::fmt::Write;
+use std::sync::mpsc::{channel, Sender};
+use std::sync::{Arc, Mutex};
 
-pub mod state;
 pub mod commands;
-pub mod grammar;
 pub mod framework;
+pub mod grammar;
+pub mod state;
 
 struct BotGuildId;
 impl typemap::Key for BotGuildId {
@@ -49,6 +49,7 @@ pub struct StaffAlertData {
     front_door: ChannelId,
     mod_call: RoleId,
     the_void: ChannelId,
+    anon_feedback: ChannelId,
 }
 impl typemap::Key for StaffAlertData {
     type Value = Arc<StaffAlertData>;
@@ -75,6 +76,7 @@ fn main() {
     let front_door = env_token("FRONT_DOOR", ChannelId);
     let mod_call = env_token("MOD_CALL", RoleId);
     let the_void = env_token("THE_VOID", ChannelId);
+    let anon_feedback = env_token("ANON_FEEDBACK", ChannelId);
 
     let _ = DELETE_QUEUE.lock().unwrap().send(Err(the_void));
 
@@ -84,6 +86,7 @@ fn main() {
         front_door,
         mod_call,
         the_void,
+        anon_feedback,
     });
 
     let state = Arc::new(state::State::load());
@@ -170,7 +173,7 @@ struct Handler;
 impl EventHandler for Handler {
     fn message(&self, context: Context, msg: Message) {
         let staff_alert = staff_alert(&context);
-        if msg.channel_id != staff_alert.the_void {
+        if msg.channel_id != staff_alert.the_void && msg.channel_id != staff_alert.anon_feedback {
             return;
         }
 
@@ -194,6 +197,20 @@ impl EventHandler for Handler {
 
         if msg.content.starts_with("ADMIN:") && is_admin {
             return;
+        }
+
+        if msg.channel_id == staff_alert.anon_feedback {
+            let () = log(
+                &context,
+                &format!(
+                    "{id} ({name}) provided some anonymous feedback - {time}\n\
+                     \"{content}\"",
+                    id = msg.author.id.mention(),
+                    name = msg.author.name,
+                    content = msg.content_safe().trim(),
+                    time = msg.timestamp.to_rfc2822(),
+                ),
+            );
         }
 
         let _ = DELETE_QUEUE.lock().unwrap().send(Ok(msg.id));

@@ -70,8 +70,11 @@ GiveMe: () = {
 };
 
 TakeAway: () = {
-    "take" "away",
+    "take",
     "remove",
+    "delete",
+    "rem",
+    "del",
     "get" "rid" "of",
 };
 

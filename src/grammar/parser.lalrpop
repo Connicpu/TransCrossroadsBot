@@ -71,6 +71,7 @@ GiveMe: () = {
 
 TakeAway: () = {
     "take",
+    "take" "away",
     "remove",
     "delete",
     "rem",

@@ -58,10 +58,15 @@ Set: () = {
     "set",
     "change",
     "make",
+    "modify",
 };
 
 GiveMe: () = {
     "give" "me",
+    "give",
+    "can" "haz",
+    "gimmeh",
+    "gibe",
     "make" "me",
     "gimme",
     "can" "i" "have",
